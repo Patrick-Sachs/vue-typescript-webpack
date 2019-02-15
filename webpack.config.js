@@ -1,6 +1,9 @@
 
 var path = require('path')
 var webpack = require('webpack')
+var BrowserSyncPlugin = require("browser-sync-webpack-plugin");
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
   entry: './src/index.ts',
@@ -9,6 +12,7 @@ module.exports = {
     publicPath: '/dist/',
     filename: 'build.js'
   },
+  plugins: [],
   module: {
     rules: [
       {
@@ -58,10 +62,24 @@ module.exports = {
   devtool: '#eval-source-map'
 }
 
-if (process.env.NODE_ENV === 'production') {
+// Dev only settings
+if (!isProduction) {
+  module.exports.plugins.push(
+    new BrowserSyncPlugin({
+      host: process.env.IP || 'localhost',
+      port: process.env.PORT || 3000,
+      server: {
+        baseDir: ['./', './dist']
+      }
+    }));
+  module.exports.watch = true;
+}
+
+// Prod only settings
+if (isProduction) {
   module.exports.devtool = '#source-map'
   // http://vue-loader.vuejs.org/en/workflow/production.html
-  module.exports.plugins = (module.exports.plugins || []).concat([
+  module.exports.plugins = module.exports.plugins.concat([
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: '"production"'
